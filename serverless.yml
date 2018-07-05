@@ -13,8 +13,13 @@ functions:
       - http: ANY /
       - http: 'ANY {proxy+}'
     environment:
-      SLACK_WEBHOOK_URL: ''
-      IQ_SECRET_KEY: ''
+      NEXUS_WEBHOOK_URL: ''
+      NEXUS_SECRET_KEY: ''
 
 plugins:
   - serverless-offline
+
+custom:
+  serverless-offline:
+    host: "0.0.0.0"
+    port: 8002

@@ -18,27 +18,29 @@ const serverless = require('serverless-http');
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
-const {IncomingWebhook} = require('@slack/client');
 const validator = require('./src/webhook-signature-validator');
-const mapper = require('./src/policy-evaluation-mapper');
+const mapper = require('./src/nexus-webhook-mapper');
+const request = require('request');
 
 app.use(bodyParser.json({strict: false}));
 
 app.post('/', function(req, res) {
-  if (!validator.validate(req, process.env.IQ_SECRET_KEY)) {
+  if (!validator.validate(req, process.env.NEXUS_SECRET_KEY)) {
     res.status(401).send({error: 'Not authorized'});
     return;
   }
-  const iqNotification = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
-  const message = mapper.map(req.body);
-  iqNotification.send(message, (error, resp) => {
-    if (error) {
-      console.error(error);
-      res.status(500).send({error: error});
-      return;
-    }
-    res.send('');
-  });
+  const asset = mapper.map(req.body);
+  if (asset) {
+    request(process.env.NEXUS_WEBHOOK_URL+asset, function (error, response, body) {
+      if (error) {
+        console.error(error);
+        res.status(500).send({error: error});
+        return;
+      }
+      res.send(`Refreshed: ${asset}`);
+    });
+  } else {
+    res.send('Nothing refreshed');
+  }
 });
-
 module.exports.handler = serverless(app);

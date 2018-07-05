@@ -17,10 +17,15 @@
 const mapper = {};
 
 mapper.map = (payload) => {
-  const trailingMessage = payload.applicationEvaluation.criticalComponentCount
-      ? `${payload.applicationEvaluation.criticalComponentCount} Critical Violations`
-      : 'Congrats Critical Violation Free!!!!!';
-  return `IQ Policy Eval: ${trailingMessage}`;
+  const action = payload.action;
+  var asset;
+  if (payload.asset) {
+    const assetName = payload.asset.name;
+    asset  = (action === 'CREATED' || action === 'UPDATED')
+      ? `/repository/omni/${assetName}`
+      : undefined;
+  }
+  return asset;
 };
 
 module.exports = mapper;
